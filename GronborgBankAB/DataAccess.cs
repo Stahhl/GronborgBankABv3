@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Data.SqlClient;
-using System.IO;
 
 /// <summary>
 /// 'DataAccess' handels all database interactions
@@ -566,6 +564,131 @@ namespace GronborgBankAB
                 return false;
             }
         }
+        // NY FUNKTION
+        internal bool RemoveCustomer(int customerID)
+        {
+            string sqlQuery = @"DELETE FROM PersonAccounts WHERE CustomerId=@id DELETE FROM Customers WHERE Id=@id";
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(App.ConnectionString))
+                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                {
+                    connection.Open();
+                    command.Parameters.Add(new SqlParameter("id", customerID));
 
+                    command.ExecuteNonQuery();
+
+                    connection.Close();
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+                return false;
+            }
+        }
+        // NY FUNKTION
+        internal bool RemoveEmployee(int employeeId)
+        {
+            string sqlQuery = @"UPDATE Customers SET EmployeeId=NULL WHERE Employeeid=@id DELETE FROM Employees WHERE Id=@id";
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(App.ConnectionString))
+                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                {
+                    connection.Open();
+                    command.Parameters.Add(new SqlParameter("id", employeeId));
+
+                    command.ExecuteNonQuery();
+
+                    connection.Close();
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+                return false;
+            }
+        }
+        internal int GetLatestAccountId()
+        {
+            string sqlQuery = "SELECT MAX([Accounts].[AccountNumber]) FROM[Accounts]";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(App.ConnectionString))
+                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                {
+                    connection.Open();
+                    //command.Parameters.Add(new SqlParameter())
+                    SqlDataReader dataReader = command.ExecuteReader();
+                    if(dataReader.Read())
+                    {
+                        return dataReader.GetSqlInt32(0).Value;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+                throw new Exception(e.Message);
+            }
+            return 0;
+        }
+        internal bool AddNewAccount(Account account)
+        {
+            string sqlQuery = @"INSERT INTO Accounts ([AccountTypeId], [Balance]) 
+                              VALUES 
+                              (@AccountTypeId, @Balance)";
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(App.ConnectionString))
+                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                {
+                    connection.Open();
+                    command.Parameters.Add(new SqlParameter("AccountTypeId", account.AccountTypeId));
+                    command.Parameters.Add(new SqlParameter("Balance", account.Balance));
+
+                    command.ExecuteNonQuery();
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+                throw new Exception(e.Message);
+            }
+        }
+        internal bool AddNewPersonAccount(PersonAccount personAccount)
+        {
+            string sqlQuery = @"INSERT INTO PersonAccounts ([AccountNumber], [CustomerId]) 
+                              VALUES 
+                              (@AccountNumber, @CustomerId)";
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(App.ConnectionString))
+                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                {
+                    connection.Open();
+                    command.Parameters.Add(new SqlParameter("AccountNumber", personAccount.AccountNumber));
+                    command.Parameters.Add(new SqlParameter("CustomerId", personAccount.CustmerId));
+
+                    command.ExecuteNonQuery();
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+                throw new Exception(e.Message);
+            }
+        }
     }
 }

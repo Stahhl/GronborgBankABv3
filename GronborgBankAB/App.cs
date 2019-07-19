@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 /// <summary>
 /// 'App' handels all output / input
@@ -23,7 +22,6 @@ namespace GronborgBankAB
             _dataAccess = new DataAccess();
             _colorManager = new ColorManager();
             _dataAccess.CheckConnection();
-            //WriteLine($"Connection is: {_dataAccess.CheckConnection()}", ConsoleColor.Green);    
         }
         public void Run()
         {
@@ -82,7 +80,7 @@ namespace GronborgBankAB
                         break;
                     case "8":
                         Console.Clear();
-                        AddAccountToCustomer(null, new Account(), 0);
+                        AddAccountToCustomer(null, new Account(), new AccountType(), 0);
                         break;
                     case "9":
                         Console.Clear();
@@ -97,12 +95,10 @@ namespace GronborgBankAB
                     case "14":
                         Console.Clear();
                         RemoveCustomer();
-                        keepGoing = false;
                         break;
                     case "15":
                         Console.Clear();
-                        RemoveEmploee();
-                        keepGoing = false;
+                        RemoveEmployee();
                         break;
                     case "20":
                         keepGoing = false;
@@ -115,16 +111,105 @@ namespace GronborgBankAB
                 }
             }
         }
-
-        private void RemoveEmploee()
+        private void RemoveEmployee()
         {
-            throw new NotImplementedException();
+            Console.Clear();
+            ListEmployees(_dataAccess.GetAllEmployees(), false);
+            Console.WriteLine();
+
+            Console.Write("Mata in ID:et på den anställda du vill ta bort: ");
+
+            string input = GreenInput();
+
+            if (int.TryParse(input, out int result) == true)
+            {
+                Employee emp = _dataAccess.GetEmployeeById(result);
+                if (emp != null)
+                {
+                    ListEmployees(new List<Employee> { emp }, false);
+                    Console.WriteLine();
+                    Console.WriteLine("Vill du ta bort denna anställda?");
+                    Console.WriteLine("1) Ta bort");
+                    Console.WriteLine("9) Avbryt");
+
+                    string userAnswer = Console.ReadLine();
+
+                    if (userAnswer == "1")
+                    {
+                        if (_dataAccess.RemoveEmployee(emp.Id))
+                        {
+                            Console.WriteLine($"Successfully removed employee, press enter to continue");
+                            Console.ReadLine();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Removal of employee failed, press enter to continue");
+                            Console.ReadLine();
+                        }
+
+                    }
+                    if (userAnswer == "9")
+                    {
+
+                    }
+
+                }
+                else
+                {
+                    Console.Write($"Det finns ingen anställd med ID \"{input}\"");
+                }
+            }
         }
         private void RemoveCustomer()
         {
-            throw new NotImplementedException();
+            Console.Clear();
+            ListCustomers(_dataAccess.GetAllCustomers(), false);
+            Console.WriteLine();
+
+            Console.Write("Mata in ID:et på den kund du vill ta bort: ");
+
+            string input = GreenInput();
+
+            if (int.TryParse(input, out int result) == true)
+            {
+                Customer customer = _dataAccess.GetCustomerById(result);
+                if (customer != null)
+                {
+                    ListCustomers(new List<Customer> { customer }, false);
+                    Console.WriteLine();
+                    Console.WriteLine("Vill du ta bort denna kund?");
+                    Console.WriteLine("1) Ta bort");
+                    Console.WriteLine("9) Avbryt");
+
+                    string userAnswer = Console.ReadLine();
+
+                    if (userAnswer == "1")
+                    {
+                        if (_dataAccess.RemoveCustomer(customer.Id))
+                        {
+                            Console.WriteLine($"Kunden borttagen, tryck enter för att fortsätta");
+                            Console.ReadLine();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Borttagning misslyckades, tryck enter för att fortsätta");
+                            Console.ReadLine();
+                        }
+
+                    }
+                    else if (userAnswer == "9")
+                    {
+
+                    }
+                }
+                else
+                {
+                    Console.Write($"Det finns ingen anställd med ID \"{input}\". Tryck enter för att fortsätta");
+                    Console.ReadLine();
+                }
+            }
         }
-        private void AddAccountToCustomer(Customer customer, Account account, int index)
+        private void AddAccountToCustomer(Customer customer, Account account, AccountType accountType, int index)
         {
             if(customer == null)
             {
@@ -134,30 +219,82 @@ namespace GronborgBankAB
                     customer = _dataAccess.GetCustomerById(result1);
                     if (customer == null)
                     {
-                        Console.Clear();
                         WriteLine("Invalid input! ", ConsoleColor.Red);
-                        AddAccountToCustomer(customer, null, 0);
+                        AddAccountToCustomer(customer, new Account(), new AccountType(), 0);
                     }
                 }
+                Console.Clear();
             }
-            AccountType accountType = new AccountType();
-            PersonAccount personAccount = new PersonAccount();
 
-            //AccountType.Name
-            //Account.Balance
-            //AccountType.Intereset
-
+            WriteLine("Kund:\n", ConsoleColor.Yellow);
+            ListCustomers(new List<Customer> { customer }, false);
+            WriteLine("\nKonto:\n", ConsoleColor.Yellow);
             WriteLine($"Kontotyp: {accountType.AccountTypeName}", ConsoleColor.White);
             WriteLine($"Saldo:    {account.Balance}", ConsoleColor.White);
             WriteLine($"Ränta:    {accountType.Interest}", ConsoleColor.White);
             Console.WriteLine();
+            //Kontotyp, ränta
             if(index == 0)
             {
-                Write($"Mata in ID:et på kontotypen det nya konto bör vara: ", ConsoleColor.Yellow, 0);
+                WriteLine($"Mata in ID:et på kontotypen det nya konto bör vara: \n", ConsoleColor.Yellow);
                 ListAccountTypes(_dataAccess.GetAllAccountTypes(), false);
                 string input = GreenInput();
+                if(int.TryParse(input, out int accType) == true && _dataAccess.GetAccountTypeByAccountTypeId(accType) != null)
+                {
+                    accountType.AccountTypeName = _dataAccess.GetAccountTypeByAccountTypeId(accType).AccountTypeName;
+                    accountType.Interest = _dataAccess.GetAccountTypeByAccountTypeId(accType).Interest;
+                    account.AccountTypeId = _dataAccess.GetAccountTypeByAccountTypeId(accType).Id;
+                    index++;
+                    Console.Clear();
+                    AddAccountToCustomer(customer, account, accountType, index);
+                }
+                else
+                {
+                    Console.Clear();
+                    WriteLine("Invalid output", ConsoleColor.Red);
+                    AddAccountToCustomer(customer, account, accountType, 0);
+                }
+            }
+            //saldo
+            if(index == 1)
+            {
+                Write($"Mata in saldo i det nya kontot: ", ConsoleColor.Yellow, 0);
+                string inputBalance = GreenInput().Replace(",",".");
+                if(decimal.TryParse(inputBalance, out decimal balance) == true)
+                {
+                    account.Balance = balance;
+                    index++;
+                    Console.Clear();
+                    AddAccountToCustomer(customer, account, accountType, index);
+                }
+                else
+                {
+                    Console.Clear();
+                    WriteLine("Invalid output", ConsoleColor.Red);
+                    AddAccountToCustomer(customer, account, accountType, 0);
+                }
             }
 
+            Console.WriteLine("Mata in 'save' för att spara kontot: ");
+            Console.WriteLine("Mata in 'restart' för att ångra och börja om: ");
+            Console.WriteLine("Mata in RETUR för att gå tillbaka utan att spara: ");
+
+            string input2 = GreenInput();
+
+            if (input2.ToUpper() == "SAVE")
+            {
+                PersonAccount personAccount = new PersonAccount();
+                _dataAccess.AddNewAccount(account);
+
+                personAccount.CustmerId = customer.Id;
+                personAccount.AccountNumber = _dataAccess.GetLatestAccountId();
+
+                _dataAccess.AddNewPersonAccount(personAccount);
+            }
+            if (input2.ToUpper() == "RESTART")
+                AddAccountToCustomer(customer, account, accountType, 0);
+
+            Run();
         }
         private void AddEmployee(Employee employee, int index)
         {
@@ -373,7 +510,7 @@ namespace GronborgBankAB
                     string input = GreenInput();
 
                     if (input.Length < 1)
-                        input = null;
+                        input = string.Empty;
 
                     customer.Address = input;
                     index++;
@@ -503,7 +640,7 @@ namespace GronborgBankAB
             if(input == "ACCOUNT")
             {
                 Console.Clear();
-                AddAccountToCustomer(customer, new Account(), 0);
+                AddAccountToCustomer(customer, new Account(), new AccountType(), 0);
             }
             else
             {
@@ -557,7 +694,18 @@ namespace GronborgBankAB
             //List customers
             foreach (var customer in customers)
             {
-                Employee employee = _dataAccess.GetEmployeeById(customer.EmployeeId);
+                // NY FUNKTION HÄR ---------------------------------------------------------------------------------------------------
+                Employee employee = new Employee();
+                if (customer.EmployeeId != -1)
+                {
+                    employee = _dataAccess.GetEmployeeById(customer.EmployeeId);
+                }
+                else
+                {
+                    employee.FirstName = "Unknown";
+                    employee.LastName = "Unknown";
+                }
+                // NY FUNKTION HÄR ---------------------------------------------------------------------------------------------------
 
                 Write(customer.Id.ToString(), _colorManager.GetColor(true), 5);
                 Write(customer.FirstName, _colorManager.GetColor(false), 10);
@@ -709,7 +857,7 @@ namespace GronborgBankAB
         }
         void EditEmployee(Employee employee)
         {
-
+            Run();
         }
         private void PerformTransaction()
         {
