@@ -27,7 +27,7 @@ namespace GronborgBankAB
     }
     public class Account
     {
-        public int AccountNumber { get; set; } //FK
+        public int AccountNumber { get; set; } //PK
         public int AccountTypeId { get; set; } //FK
         public decimal Balance { get; set; }
     }

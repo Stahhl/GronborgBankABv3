@@ -42,6 +42,7 @@ namespace GronborgBankAB
                 WriteLine("6 - Lägg till anställd", ConsoleColor.White);
                 WriteLine("7 - Kör sparroboten", ConsoleColor.White);
                 WriteLine("8 - Lägg till konto hos kund", ConsoleColor.White);
+                WriteLine("9 - Lista alla kontotyper", ConsoleColor.White);
                 WriteLine("10 - Gör överföring", ConsoleColor.White);
                 WriteLine("11 - Uttag/insättning", ConsoleColor.White);
                 WriteLine("14 - Ta bort kund", ConsoleColor.White);
@@ -74,14 +75,18 @@ namespace GronborgBankAB
                         break;
                     case "6":
                         Console.Clear();
-                        AddEmployee();
+                        AddEmployee(new Employee(), 0);
                         break;
                     case "7":
                         CalculateFutureBalance();
                         break;
                     case "8":
                         Console.Clear();
-                        AddAccountToCustomer();
+                        AddAccountToCustomer(null, new Account(), 0);
+                        break;
+                    case "9":
+                        Console.Clear();
+                        ListAccountTypes(_dataAccess.GetAllAccountTypes(), true);
                         break;
                     case "10":
                         PerformTransaction();
@@ -119,13 +124,177 @@ namespace GronborgBankAB
         {
             throw new NotImplementedException();
         }
-        private void AddAccountToCustomer()
+        private void AddAccountToCustomer(Customer customer, Account account, int index)
         {
-            throw new NotImplementedException();
+            if(customer == null)
+            {
+                Console.Write("Mata in ID:et på kunden du vill använda: ");
+                if(int.TryParse(GreenInput(), out int result1) == true)
+                {
+                    customer = _dataAccess.GetCustomerById(result1);
+                    if (customer == null)
+                    {
+                        Console.Clear();
+                        WriteLine("Invalid input! ", ConsoleColor.Red);
+                        AddAccountToCustomer(customer, null, 0);
+                    }
+                }
+            }
+            AccountType accountType = new AccountType();
+            PersonAccount personAccount = new PersonAccount();
+
+            //AccountType.Name
+            //Account.Balance
+            //AccountType.Intereset
+
+            WriteLine($"Kontotyp: {accountType.AccountTypeName}", ConsoleColor.White);
+            WriteLine($"Saldo:    {account.Balance}", ConsoleColor.White);
+            WriteLine($"Ränta:    {accountType.Interest}", ConsoleColor.White);
+            Console.WriteLine();
+            if(index == 0)
+            {
+                Write($"Mata in ID:et på kontotypen det nya konto bör vara: ", ConsoleColor.Yellow, 0);
+                ListAccountTypes(_dataAccess.GetAllAccountTypes(), false);
+                string input = GreenInput();
+            }
+
         }
-        private void AddEmployee()
+        private void AddEmployee(Employee employee, int index)
         {
-            throw new NotImplementedException();
+            Console.Clear();
+
+            WriteLine("Förnamn:          " + employee.FirstName, ConsoleColor.White);
+            WriteLine("Efternamn:        " + employee.LastName, ConsoleColor.White);
+            WriteLine("Personnummer:     " + employee.PersonNummer, ConsoleColor.White);
+            WriteLine("Adress:           " + employee.Address, ConsoleColor.White);
+            WriteLine("Telefonnummer:    " + employee.Phone, ConsoleColor.White);
+            WriteLine("Email:            " + employee.Email, ConsoleColor.White);
+
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+
+            //Input from user
+            try
+            {
+                //Förnamn
+                if (index == 0)
+                {
+                    Console.Write("Mata in förnamn (not optional): ");
+                    string input = GreenInput();
+
+                    if (input.Length < 1)
+                        throw new Exception();
+
+                    employee.FirstName = input;
+                    index++;
+                    AddEmployee(employee, index);
+                }
+                //Efternamn
+                if (index == 1)
+                {
+                    Console.Write("Mata in efternamn (not optional): ");
+
+                    string input = GreenInput();
+
+                    if (input.Length < 1)
+                        throw new Exception();
+
+                    employee.LastName = input;
+                    index++;
+                    AddEmployee(employee, index);
+                }
+                //Personnummer
+                if (index == 2)
+                {
+                    Console.Write("Mata in personnummer (not optional): ");
+
+                    string input = GreenInput().Replace("-", "");
+                    string control = input.Replace("-", "");
+
+                    bool parsed = true;
+                    foreach (char c in control)
+                    {
+                        if (int.TryParse(c.ToString(), out int result) == false)
+                            parsed = false;
+                    }
+
+                    if (parsed == false || input.Length < 1 || input.Length > 12)
+                        throw new Exception();
+
+                    employee.PersonNummer = input;
+                    index++;
+                    AddEmployee(employee, index);
+                }
+                //Adress
+                if (index == 3)
+                {
+                    Console.Write("Mata in adress (optional): ");
+
+                    string input = GreenInput();
+
+                    if (input.Length < 1)
+                        input = null;
+
+                    employee.Address = input;
+                    index++;
+                    AddEmployee(employee, index);
+                }
+                //Telefonnummer
+                if (index == 4)
+                {
+                    Console.Write("Mata in telefonnummer (optional): ");
+
+                    string input = GreenInput().Replace(" ", "");
+                    string control = input.Replace(" ", "");
+
+                    bool parsed = true;
+                    foreach (char c in control)
+                    {
+                        if (int.TryParse(c.ToString(), out int result) == false)
+                            parsed = false;
+                    }
+
+                    if (input.Length < 1 || parsed == false)
+                        input = string.Empty;
+
+                    employee.Phone = input;
+                    index++;
+                    AddEmployee(employee, index);
+                }
+                //Email
+                if (index == 5)
+                {
+                    Console.Write("Mata in email (optional): ");
+
+                    string input = GreenInput();
+
+                    if (input.Length < 1)
+                        input = string.Empty;
+
+                    employee.Email = input;
+                    index++;
+                    AddEmployee(employee, index);
+                }
+            }
+            catch
+            {
+                WriteLine("Invalid input press RETUR to continue: ", ConsoleColor.Red);
+                Console.ReadLine();
+                AddEmployee(employee, index);
+            }
+
+            Console.WriteLine("Mata in 'save' för att spara den anställde: ");
+            Console.WriteLine("Mata in 'restart' för att ångra och börja om: ");
+            Console.WriteLine("Mata in RETUR för att gå tillbaka utan att spara: ");
+
+            string input2 = GreenInput();
+
+            if (input2.ToUpper() == "SAVE")
+                _dataAccess.AddNewEmployee(employee);
+            if (input2.ToUpper() == "RESTART")
+                AddEmployee(new Employee(), 0);
+
+            Run();
         }
         private void AddCustomer(Customer customer, int index)
         {
@@ -204,7 +373,7 @@ namespace GronborgBankAB
                     string input = GreenInput();
 
                     if (input.Length < 1)
-                        input = string.Empty;
+                        input = null;
 
                     customer.Address = input;
                     index++;
@@ -313,6 +482,7 @@ namespace GronborgBankAB
             ListAccounts(accountList, false);
 
             WriteLine("\nMata in 'edit' för att editera kunden: ", ConsoleColor.Yellow);
+            WriteLine("Mata in 'account' för att lägga till ett konto: ", ConsoleColor.Yellow);
             WriteLine("Mata in kontonummer för att se utvecklingen över 40 år: ", ConsoleColor.Yellow);
             WriteLine("Mata in RETUR för att gå tillbaka: ", ConsoleColor.Yellow);
 
@@ -329,6 +499,11 @@ namespace GronborgBankAB
             {
                 Console.Clear();
                 EditCustomer(customer);
+            }
+            if(input == "ACCOUNT")
+            {
+                Console.Clear();
+                AddAccountToCustomer(customer, new Account(), 0);
             }
             else
             {
@@ -441,6 +616,29 @@ namespace GronborgBankAB
             }
 
             if(stop == true)
+            {
+                WriteLine("\nRETUR för att gå tillbaka: ", ConsoleColor.Yellow);
+                Console.ReadLine();
+                Run();
+            }
+        }
+        void ListAccountTypes(List<AccountType> accountTypes, bool stop)
+        {
+            #region header
+            Write("ID: ", ConsoleColor.White, 5);
+            Write("Konto typ: ", ConsoleColor.White, 25);
+            Write("Ränta: ", ConsoleColor.White, 5);
+
+            Console.WriteLine();
+            #endregion
+            foreach (var aT in accountTypes)
+            {
+                Write(aT.Id.ToString(), _colorManager.GetColor(true), 5);
+                Write(aT.AccountTypeName.ToString(), _colorManager.GetColor(false), 25);
+                Write(aT.Interest.ToString(), _colorManager.GetColor(false), 5);
+                Console.WriteLine();
+            }
+            if (stop == true)
             {
                 WriteLine("\nRETUR för att gå tillbaka: ", ConsoleColor.Yellow);
                 Console.ReadLine();

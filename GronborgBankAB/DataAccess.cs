@@ -168,8 +168,8 @@ namespace GronborgBankAB
         public bool AddNewCustomer(Customer customer)
         {
             string sqlQuery = @"INSERT INTO Customers (FirstName, LastName, PersonNummer, Address, Phone, Email, EmployeeId) 
-                              VALUES (FirstName=@FirstName, LastName=@LastName, PersonNummer=@PersonNummer,
-                              Address=@Address, Phone=@Phone, Email=@Email, EmployeeId=@EmployeeId";
+                              VALUES 
+                              (@FirstName, @LastName, @PersonNummer,@Address, @Phone, @Email, @EmployeeId)";
             try
             {
                 using (SqlConnection connection = new SqlConnection(App.ConnectionString))
@@ -188,9 +188,11 @@ namespace GronborgBankAB
                     return true;
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return false;
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+                throw new Exception(e.Message);
             }
         }
 
@@ -292,8 +294,8 @@ namespace GronborgBankAB
         public bool AddNewEmployee(Employee employee)
         {
             string sqlQuery = @"INSERT INTO Employees (FirstName, LastName, PersonNummer, Address, Phone, Email) 
-                              VALUES (FirstName=@FirstName, LastName=@LastName, PersonNummer=@PersonNummer,
-                              Address=@Address, Phone=@Phone, Email=@Email";
+                              VALUES 
+                              (@FirstName, @LastName, @PersonNummer, @Address, @Phone, @Email)";
             try
             {
                 using (SqlConnection connection = new SqlConnection(App.ConnectionString))
@@ -311,9 +313,11 @@ namespace GronborgBankAB
                     return true;
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return false;
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+                throw new Exception(e.Message);
             }
         }
 
@@ -440,7 +444,7 @@ namespace GronborgBankAB
         {
             List<AccountType> accountTypeList = new List<AccountType>();
 
-            string sqlQuery = @"SELECT * FROM AccountTypes";
+            string sqlQuery = @"SELECT * FROM AccountType";
 
             using (SqlConnection connection = new SqlConnection(App.ConnectionString))
             using (SqlCommand command = new SqlCommand(sqlQuery, connection))
@@ -454,7 +458,7 @@ namespace GronborgBankAB
                     AccountType accountType = new AccountType
                     {
                         Id = reader.GetSqlInt32(0).Value,
-                        Interest = reader.GetSqlInt32(1).Value,
+                        Interest = reader.GetSqlDecimal(1).Value,
                         AccountTypeName = reader.GetSqlString(2).Value
                     };
 
