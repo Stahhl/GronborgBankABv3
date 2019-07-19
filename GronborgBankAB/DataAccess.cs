@@ -527,9 +527,7 @@ namespace GronborgBankAB
                     command2.Parameters.Add(new SqlParameter("Balance", to.Balance + amount));
                     command2.ExecuteNonQuery();
 
-                    Console.WriteLine("BEFORE COMMIT");
                     transaction.Commit();
-                    Console.WriteLine("AFTER COMMIT");
                     return true;
                 }
             }
